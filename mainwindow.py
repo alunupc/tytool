@@ -444,6 +444,7 @@ class MainWindow(QMainWindow):
 
         self.targetEdit.clicked.connect(self.on_edit_double_clicked)
         self.extractBtn.clicked.connect(self.on_extract_clicked)
+        self.initBtn.clicked.connect(self.on_init_btn_clicked)
 
     @pyqtSlot()
     def on_init_btn_clicked(self):

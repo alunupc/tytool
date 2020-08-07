@@ -1,6 +1,8 @@
 # -*- coding:utf8 -*-
 import json
+import os
 import sys
+from os.path import join
 
 import matplotlib
 from matplotlib import pylab
@@ -206,14 +208,14 @@ class MainWindow(QMainWindow):
         self.comboBox.addItem("国有资本经营预算收支科目")
         self.comboBox.addItem("社会保险基金预算收支科目")
         self.comboBox.addItem("支出经济分类科目")
-        self.comboBox.addItem("一般公共预算收入科目")
-        self.comboBox.addItem("一般公共预算支出科目")
-        self.comboBox.addItem("政府性基金预算收入科目")
-        self.comboBox.addItem("政府性基金预算支出科目")
-        self.comboBox.addItem("国有资本经营预算收入科目")
-        self.comboBox.addItem("国有资本经营预算支出科目")
-        self.comboBox.addItem("社会保险基金预算收入科目")
-        self.comboBox.addItem("社会保险基金预算支出科目")
+        # self.comboBox.addItem("一般公共预算收入科目")
+        # self.comboBox.addItem("一般公共预算支出科目")
+        # self.comboBox.addItem("政府性基金预算收入科目")
+        # self.comboBox.addItem("政府性基金预算支出科目")
+        # self.comboBox.addItem("国有资本经营预算收入科目")
+        # self.comboBox.addItem("国有资本经营预算支出科目")
+        # self.comboBox.addItem("社会保险基金预算收入科目")
+        # self.comboBox.addItem("社会保险基金预算支出科目")
         self.comboBox.setStyleSheet("""
                     QComboBox {border:none;background:#000000;color:#ffffff;
                     padding-left:30px;font-size:16px "SimHei";}
@@ -372,7 +374,7 @@ class MainWindow(QMainWindow):
         self.budgetLayout.addWidget(self.targetEdit, 1, 1, 1, 3)
 
         # self.budgetLayout.addWidget(self.configEdit, 2, 0, 6, 4)
-        # self.budgetLayout.addWidget(self.comboBox, 0, 0, 1, 4)
+        self.budgetLayout.addWidget(self.comboBox, 2, 0, 1, 4)
         self.budgetLayout.addWidget(self.subLab, 3, 0)
         self.budgetLayout.addWidget(self.subEdit, 3, 1)
         # self.budgetLayout.addWidget(self.regxLab, 3, 2)
@@ -444,6 +446,15 @@ class MainWindow(QMainWindow):
         self.extractBtn.clicked.connect(self.on_extract_clicked)
 
     @pyqtSlot()
+    def on_init_btn_clicked(self):
+        if self.targetEdit.text().strip() == "" or not os.path.isdir(self.targetEdit.text().strip()):
+            print()
+        else:
+            for file in os.listdir(self.self.targetEdit.text().strip()):
+                if os.path.isfile(join(self.targetEdit.text(), file)):
+                    os.remove(join(self.targetEdit.text(), file))
+
+    @pyqtSlot()
     def on_check_btn_clicked(self):
         if self.currentPageEdit.text().strip() == "" or self.pathEdit.text().strip() == "":
             QMessageBox.information(self, "提示", '    输入不能为空！    ')
@@ -459,7 +470,6 @@ class MainWindow(QMainWindow):
                 axis('tight')
                 fig = pylab.gcf()
                 fig.canvas.set_window_title("第" + self.currentPageEdit.text().strip() + "页表格解析示意图")
-
 
     @pyqtSlot()
     def on_extract_clicked(self):

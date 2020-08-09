@@ -449,7 +449,7 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def on_init_btn_clicked(self):
         if self.targetEdit.text().strip() == "" or not os.path.isdir(self.targetEdit.text().strip()):
-            print()
+            QMessageBox.information(self, "提示", '    输入不能为空，或者路径有错误！    ')
         else:
             for file in os.listdir(self.self.targetEdit.text().strip()):
                 if os.path.isfile(join(self.targetEdit.text(), file)):

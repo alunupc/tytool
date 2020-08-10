@@ -40,4 +40,8 @@ if __name__ == "__main__":
         print(a[8])
     except Exception as e:
         print(e)
-
+    aa = "http://114.215.144.36:7006/yjsgk/sjconcent?head_id=35&genre=1"
+    print(aa.split("yjsgk"))
+    print(aa.replace("//", "/").split("/"))
+    bb = "/yjsgk/download?fileId=4996"
+    print(bb.split("/"))

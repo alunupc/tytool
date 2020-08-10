@@ -3,9 +3,8 @@ import json
 import os
 import re
 import sys
-
-import camelot
 import matplotlib
+import camelot
 import numpy as np
 import pdfplumber
 import pymysql
@@ -18,6 +17,7 @@ from PyQt5.QtWidgets import QMainWindow, QTreeWidget, QWidget, QTreeWidgetItem, 
 from matplotlib import pylab
 from matplotlib.pyplot import axis
 
+from downloader import DownLoader
 from excel import Excel
 from lineedit import LineEdit
 from node import MultiTree, TreeNode
@@ -276,7 +276,7 @@ class MainWindow(QMainWindow):
 
         bound_validator = QtGui.QRegExpValidator(QtCore.QRegExp(r"(^[0-9]\d*)(,[0-9]\d*)+"), self.boundEdit)
         self.boundEdit.setValidator(bound_validator)
-
+        """
         self.pathEdit.setText("C:/Users/localhost/Desktop/bb/新乐市2019年政府预算公开附表.xlsx")
         self.targetEdit.setText("C:/Users/localhost/Desktop/cc")
         self.subEdit.setText("1")
@@ -284,8 +284,8 @@ class MainWindow(QMainWindow):
         self.budgetEdit.setText("2")
         self.actualEdit.setText("")
         self.pageEdit.setText("1")
-        # self.boundEdit.setText("0,700,550,0")
-
+        self.boundEdit.setText("0,700,550,0")
+        """
         self.checkBtn = QPushButton("查看")
         self.pathEdit.setObjectName("path")
         self.targetEdit.setObjectName("target")
@@ -409,43 +409,69 @@ class MainWindow(QMainWindow):
         self.budgetLayout.addWidget(self.targetLab, 1, 0)
         self.budgetLayout.addWidget(self.targetEdit, 1, 1, 1, 3)
 
+        self.spiderBox = QGroupBox("文件下载")
+        self.urlLab = QLabel("下载页地址：")
+        self.urlEdit = QLineEdit()
+        self.downloadBtn = QPushButton("下载当前页文件")
+        self.spiderLayout = QHBoxLayout()
+        self.spiderLayout.addWidget(self.urlLab)
+        self.spiderLayout.addWidget(self.urlEdit)
+        self.spiderLayout.addSpacing(20)
+        self.spiderLayout.addWidget(self.downloadBtn)
+        self.spiderBox.setLayout(self.spiderLayout)
+
+        url_validator = QtGui.QRegExpValidator(
+            QtCore.QRegExp(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"),
+            self.urlEdit)
+        self.urlEdit.setValidator(url_validator)
+
+        self.budgetLayout.addWidget(self.spiderBox, 3, 0, 4, 4)
         # self.budgetLayout.addWidget(self.configEdit, 2, 0, 6, 4)
-        self.budgetLayout.addWidget(self.comboBox, 2, 0, 1, 4)
-        self.budgetLayout.addWidget(self.subLab, 3, 0)
-        self.budgetLayout.addWidget(self.subEdit, 3, 1)
+        self.budgetLayout.addWidget(self.comboBox, 8, 0, 1, 4)
+        self.budgetLayout.addWidget(self.subLab, 9, 0)
+        self.budgetLayout.addWidget(self.subEdit, 9, 1)
         # self.budgetLayout.addWidget(self.regxLab, 3, 2)
         # self.budgetLayout.addWidget(self.regxEdit, 3, 3)
         # self.budgetLayout.addWidget(self.posLab, 4, 2)
         # self.budgetLayout.addWidget(self.posEdit, 4, 3)
 
-        self.budgetLayout.addWidget(self.codeLab, 3, 2)
-        self.budgetLayout.addWidget(self.codeEdit, 3, 3)
+        self.budgetLayout.addWidget(self.codeLab, 9, 2)
+        self.budgetLayout.addWidget(self.codeEdit, 9, 3)
 
-        self.budgetLayout.addWidget(self.budgetLab, 4, 0)
-        self.budgetLayout.addWidget(self.budgetEdit, 4, 1)
-        self.budgetLayout.addWidget(self.actualLab, 4, 2)
-        self.budgetLayout.addWidget(self.actualEdit, 4, 3)
+        self.budgetLayout.addWidget(self.budgetLab, 10, 0)
+        self.budgetLayout.addWidget(self.budgetEdit, 10, 1)
+        self.budgetLayout.addWidget(self.actualLab, 10, 2)
+        self.budgetLayout.addWidget(self.actualEdit, 10, 3)
 
-        self.budgetLayout.addWidget(self.pageLab, 7, 0)
-        self.budgetLayout.addWidget(self.pageEdit, 7, 1)
+        self.budgetLayout.addWidget(self.pageLab, 11, 0)
+        self.budgetLayout.addWidget(self.pageEdit, 11, 1)
 
-        self.budgetLayout.addWidget(self.boundLab, 8, 0)
-        self.budgetLayout.addWidget(self.boundEdit, 8, 1)
-        self.budgetLayout.addWidget(self.currentPageLab, 8, 2)
-        self.budgetLayout.addWidget(self.currentPageEdit, 8, 3)
-        self.budgetLayout.addWidget(self.checkBtn, 8, 4)
+        self.budgetLayout.addWidget(self.boundLab, 12, 0)
+        self.budgetLayout.addWidget(self.boundEdit, 12, 1)
+        self.budgetLayout.addWidget(self.currentPageLab, 12, 2)
+        self.budgetLayout.addWidget(self.currentPageEdit, 12, 3)
+        self.budgetLayout.addWidget(self.checkBtn, 12, 4)
 
-        self.budgetLayout.addWidget(self.initBtn, 10, 0)
-        self.budgetLayout.addWidget(self.extractBtn, 10, 1)
-        self.budgetLayout.addWidget(self.genBtn, 10, 3)
+        self.btnWidget = QWidget()
+        self.btnLayout = QHBoxLayout()
+        self.btnLayout.addWidget(self.initBtn)
+        self.btnLayout.addSpacing(20)
+        self.btnLayout.addWidget(self.extractBtn)
+        self.btnLayout.addSpacing(20)
+        self.btnLayout.addWidget(self.genBtn)
+        self.btnWidget.setLayout(self.btnLayout)
+        self.budgetLayout.addWidget(self.btnWidget, 13, 0, 1, 4)
 
-        # for i in range(11):
-        #     self.budgetLayout.setRowMinimumHeight(i, 25)
+        # self.budgetLayout.addWidget(self.initBtn, 10, 0)
+        # self.budgetLayout.addWidget(self.extractBtn, 10, 1)
+        # self.budgetLayout.addWidget(self.genBtn, 10, 3)
+        for i in range(14):
+            self.budgetLayout.setRowMinimumHeight(i, 25)
         self.budgetBox.setLayout(self.budgetLayout)
+
         self.rightLayout.addWidget(self.dataBox)
         self.rightLayout.addSpacing(20)
         self.rightLayout.addWidget(self.budgetBox)
-
         self.rightLayout.addStretch(1)
         self.rightWidget.setLayout(self.rightLayout)
 
@@ -483,6 +509,20 @@ class MainWindow(QMainWindow):
         self.extractBtn.clicked.connect(self.on_extract_clicked)
         self.initBtn.clicked.connect(self.on_init_btn_clicked)
         self.genBtn.clicked.connect(self.on_gen_btn_clicked)
+        self.downloadBtn.clicked.connect(self.on_download_btn_clicked)
+
+    @pyqtSlot()
+    def on_download_btn_clicked(self):
+        if self.urlEdit.text().strip() == "":
+            QMessageBox.information(self, "提示", '    url地址不能为空！    ')
+            return
+        if self.targetEdit.text().strip() == "":
+            QMessageBox.information(self, "提示", '    目标地址不能为空！    ')
+            return
+        downloader = DownLoader(timeout=30, url=self.urlEdit.text().strip(), path=self.targetEdit.text().strip())
+        downloader.download_file()
+        QMessageBox.information(self, "提示", '    文件下载完成！    ')
+        pass
 
     @pyqtSlot()
     def on_gen_btn_clicked(self):
@@ -519,7 +559,6 @@ class MainWindow(QMainWindow):
                                    pages=self.currentPageEdit.text().strip(), table_areas=['0,700,550,50'])
             if pdf:
                 plt = camelot.plot(pdf[0], kind='textedge')
-                print(type(plt))
                 plt.show()
                 axis('tight')
                 fig = pylab.gcf()

@@ -584,6 +584,9 @@ class MainWindow(QMainWindow):
         if self.subEdit.text().strip() == "" and self.codeEdit.text().strip() == "":
             QMessageBox.information(self, "提示", '    科目名称和科目编码不能同时为空！    ')
             return
+        if self.subEdit.text().strip() != "" and self.codeEdit.text().strip() != "":
+            QMessageBox.information(self, "提示", '    科目名称和科目编码不能同时非空！    ')
+            return
         try:
             process_file(self.pathEdit.text().strip())
             suffix = self.pathEdit.text().split(".")[-1]

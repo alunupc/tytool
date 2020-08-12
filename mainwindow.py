@@ -552,7 +552,7 @@ class MainWindow(QMainWindow):
                     # print(os.path.join(self.targetEdit.text().strip().replace("/", "\\"), file))
                     if os.path.isfile(os.path.join(self.targetEdit.text().strip().replace("/", "\\"), file)):
                         os.remove(os.path.join(self.targetEdit.text().strip().replace("/", "\\"), file))
-                        QMessageBox.information(self, "提示", '    清空文件成功！    ')
+                QMessageBox.information(self, "提示", '    清空文件成功！    ')
         except Exception as e:
             QMessageBox.information(self, "提示", e)
 

@@ -118,17 +118,26 @@ class RunThread(QtCore.QThread):
         self.resSignal.emit(self.year, self.tree)  # 任务完成后，发送信号
 
 
-class ExcelThread(QtCore.QThread):
+class DownloadThread(QtCore.QThread):
     resSignal = QtCore.pyqtSignal(str)
 
-    def __init__(self):
-        super(RunThread, self).__init__()
+    def __init__(self, url, path):
+        super(DownloadThread, self).__init__()
+        self.url = url
+        self.path = path
 
     def __del__(self):
         self.wait()
 
     def run(self):
-        print("")
+        # print("")
+        try:
+            downloader = DownLoader(timeout=30, url=self.url, path=self.path)
+            downloader.download_file()
+            self.resSignal.emit("ok")  # 任务完成后，发送信号
+        except Exception as e:
+            self.resSignal.emit("fail")  # 任务完成后，发送信号
+            # QMessageBox.information(self, "提示", '    ！    ')
 
 
 class MainWindow(QMainWindow):
@@ -504,6 +513,7 @@ class MainWindow(QMainWindow):
         self.tree = MultiTree({"id": 0, "pid": -1, "name": "政府科目", "code": "0"})
         # 预声明子线程
         self.initThread = RunThread(self.root, self.tree, "2020")
+        self.downloadThread = DownloadThread("", "")
         # 子树对应字典
         self.tree_dict = {}
         self.sheet_name_list = ["一般公共预算收支科目", "政府性基金预算收支科目", "国有资本经营预算收支科目", "社会保险基金预算收支科目", "支出经济分类科目"]
@@ -527,10 +537,15 @@ class MainWindow(QMainWindow):
         if self.downloadEdit.text().strip() == "":
             QMessageBox.information(self, "提示", '    文件夹地址不能为空！    ')
             return
-        downloader = DownLoader(timeout=30, url=self.urlEdit.text().strip(), path=self.downloadEdit.text().strip())
-        downloader.download_file()
-        QMessageBox.information(self, "提示", '    文件下载完成！    ')
-        pass
+
+        self.downloadThread = DownloadThread(url=self.urlEdit.text().strip(), path=self.downloadEdit.text().strip())
+        self.downloadThread.resSignal.connect(lambda _msg: self.on_download_thread(_msg))
+        self.downloadThread.start()
+
+        # downloader = DownLoader(timeout=30, url=self.urlEdit.text().strip(), path=self.downloadEdit.text().strip())
+        # downloader.download_file()
+        # QMessageBox.information(self, "提示", '    文件下载完成！    ')
+        # pass
 
     @pyqtSlot()
     def on_gen_btn_clicked(self):
@@ -552,7 +567,7 @@ class MainWindow(QMainWindow):
                     # print(os.path.join(self.targetEdit.text().strip().replace("/", "\\"), file))
                     if os.path.isfile(os.path.join(self.targetEdit.text().strip().replace("/", "\\"), file)):
                         os.remove(os.path.join(self.targetEdit.text().strip().replace("/", "\\"), file))
-                        QMessageBox.information(self, "提示", '    清空文件成功！    ')
+                QMessageBox.information(self, "提示", '    清空文件成功！    ')
         except Exception as e:
             QMessageBox.information(self, "提示", e)
 
@@ -784,6 +799,13 @@ class MainWindow(QMainWindow):
             self.initThread = RunThread(self.root, self.tree, year)
             self.initThread.resSignal.connect(lambda _year, _tree: self.on_init_thread(_year, _tree))
             self.initThread.start()
+
+    @pyqtSlot()
+    def on_download_thread(self, msg):
+        if msg == "ok":
+            QMessageBox.information(self, "提示", '    文件下载成功！    ')
+        else:
+            QMessageBox.information(self, "提示", '    文件下载失败！    ')
 
     @pyqtSlot()
     def on_init_thread(self, year, tree):

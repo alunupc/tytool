@@ -3,8 +3,9 @@ import json
 import os
 import re
 import sys
-import matplotlib
+
 import camelot
+import matplotlib
 import numpy as np
 import pdfplumber
 import pymysql
@@ -412,12 +413,18 @@ class MainWindow(QMainWindow):
         self.spiderBox = QGroupBox("文件下载")
         self.urlLab = QLabel("下载页地址：")
         self.urlEdit = QLineEdit()
+        self.downloadLab = QLabel("文件下载路径：")
+        self.downloadEdit = LineEdit()
+        self.downloadEdit.setObjectName("download")
+
         self.downloadBtn = QPushButton("下载当前页文件")
-        self.spiderLayout = QHBoxLayout()
-        self.spiderLayout.addWidget(self.urlLab)
-        self.spiderLayout.addWidget(self.urlEdit)
-        self.spiderLayout.addSpacing(20)
-        self.spiderLayout.addWidget(self.downloadBtn)
+        self.spiderLayout = QGridLayout()
+        self.spiderLayout.addWidget(self.urlLab, 0, 0)
+        self.spiderLayout.addWidget(self.urlEdit, 0, 1)
+        # self.spiderLayout.addSpacing(20)
+        self.spiderLayout.addWidget(self.downloadLab, 1, 0)
+        self.spiderLayout.addWidget(self.downloadEdit, 1, 1)
+        self.spiderLayout.addWidget(self.downloadBtn, 1, 2)
         self.spiderBox.setLayout(self.spiderLayout)
 
         url_validator = QtGui.QRegExpValidator(
@@ -506,6 +513,7 @@ class MainWindow(QMainWindow):
         self.checkBtn.clicked.connect(self.on_check_btn_clicked)
 
         self.targetEdit.clicked.connect(self.on_edit_double_clicked)
+        self.downloadEdit.clicked.connect(self.on_edit_double_clicked)
         self.extractBtn.clicked.connect(self.on_extract_clicked)
         self.initBtn.clicked.connect(self.on_init_btn_clicked)
         self.genBtn.clicked.connect(self.on_gen_btn_clicked)
@@ -516,10 +524,10 @@ class MainWindow(QMainWindow):
         if self.urlEdit.text().strip() == "":
             QMessageBox.information(self, "提示", '    url地址不能为空！    ')
             return
-        if self.targetEdit.text().strip() == "":
-            QMessageBox.information(self, "提示", '    目标地址不能为空！    ')
+        if self.downloadEdit.text().strip() == "":
+            QMessageBox.information(self, "提示", '    文件夹地址不能为空！    ')
             return
-        downloader = DownLoader(timeout=30, url=self.urlEdit.text().strip(), path=self.targetEdit.text().strip())
+        downloader = DownLoader(timeout=30, url=self.urlEdit.text().strip(), path=self.downloadEdit.text().strip())
         downloader.download_file()
         QMessageBox.information(self, "提示", '    文件下载完成！    ')
         pass
@@ -747,10 +755,16 @@ class MainWindow(QMainWindow):
                                                    "请选择文件路径", "/")
             if filepath:
                 self.pathEdit.setText(filepath[0].strip())
-        else:
+        elif self.sender().objectName() == "target":
             directory = QFileDialog.getExistingDirectory(self, "请选择文件夹路径", "/")
             if directory:
                 self.targetEdit.setText(directory.strip())
+        elif self.sender().objectName() == "download":
+            directory = QFileDialog.getExistingDirectory(self, "请选择文件夹路径", "/")
+            if directory:
+                self.downloadEdit.setText(directory.strip())
+        else:
+            pass
 
     @pyqtSlot()
     def on_connect_clicked(self):

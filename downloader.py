@@ -17,6 +17,7 @@ class DownLoader:
         self.browser = webdriver.Chrome(chrome_options=self.chrome_options)
         self.browser.set_page_load_timeout(self.timeout)
         self.wait = WebDriverWait(self.browser, self.timeout)
+        # self.path = path.rstrip(path.split("/")[-1])
         self.path = path
         self.url = url
 
@@ -30,7 +31,7 @@ class DownLoader:
             for item in html.find_all('a'):
                 if item.text.endswith('.pdf') or item.text.endswith('.xls') or item.text.endswith(
                         '.xlsx') or item.text.endswith('.doc') or item.text.endswith('.docx') or item.text.endswith(
-                        '.rar') or item.text.endswith('.zip'):
+                    '.rar') or item.text.endswith('.zip'):
                     element = self.browser.find_element_by_partial_link_text(item.text.split()[-1])
                     self.download(element.get_attribute('href'), item.text)
             for root, dirs, files in os.walk(self.path.replace("/", "\\")):
@@ -96,8 +97,12 @@ class DownLoader:
 
 
 if __name__ == '__main__':
-    path = r"C:\Users\localhost\Desktop\bb"
-    for root, dirs, files in os.walk(path.replace("/", "\\")):
-        print(files)
+    # path = r"C:\Users\localhost\Desktop\bb"
+    # for root, dirs, files in os.walk(path.replace("/", "\\")):
+    #     print(files)
     # DownLoader.decompression(r"C:\Users\localhost\Desktop\bb\bb.rar", r"C:\Users\localhost\Desktop\bb")
+    path = "C:/Users/localhost/Desktop/bb/石家庄市2018年市本级和全市财政总决算报表.pdf"
+    print(path.split("/")[-1])
+    print('_' * 20, path.rstrip(path.split("/")[-1]))
+    print('_' * 120)
     pass

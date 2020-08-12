@@ -7,7 +7,6 @@ import sys
 import camelot
 import matplotlib
 import numpy as np
-import pdfplumber
 import pymysql
 import xlrd
 from PyQt5 import QtGui, QtCore
@@ -636,13 +635,31 @@ class MainWindow(QMainWindow):
                         QMessageBox.information(self, "提示", '    提取信息结束！    ')
                         print(self.json)
                 else:
+                    """
                     pdf = pdfplumber.open(self.pathEdit.text().strip())
+                    # print(pdf.pages)
+                    # print(len(pdf.pages))
+                    # print(page)
                     for i, _page in enumerate(pdf.pages):
                         if i + 1 in page:
                             table_list = []
+                            print(_page.extract_text())
                             for pdf_table in _page.extract_tables():
                                 for row in pdf_table:
                                     table_list.append(row)
+                                    print(row)
+                            print(table_list)
+                            self.parse(table_list)
+                    """
+                    if len(page) > 0:
+                        # print((list(map(str, page))))
+                        pdf = camelot.read_pdf(self.pathEdit.text().strip(), flavor='stream',
+                                               pages=','.join(list(map(str, page))))
+                        # print(len(pdf))
+                        for i in range(len(pdf)):
+                            table_list = []
+                            for row_data in pdf[i].df.values.tolist():
+                                table_list.append(row_data)
                             self.parse(table_list)
                     QMessageBox.information(self, "提示", '    提取信息结束！    ')
 

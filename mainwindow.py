@@ -722,6 +722,9 @@ class MainWindow(QMainWindow):
 
     def parse(self, data_list):
         try:
+            if len(data_list) == 0:
+                QMessageBox.information(self, "提示", '    表格解析失败！    ')
+                return
             budget_num = process_param(self.budgetEdit.text().strip())
             actual_num = process_param(self.actualEdit.text().strip())
             if self.codeEdit.text().strip() != "":

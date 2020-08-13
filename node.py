@@ -107,3 +107,5 @@ if __name__ == '__main__':
     #     print(n)
     # print('_' * 60)
     # print("".join(re.findall(r'[\u4e00-\u9fff]+', sample)))
+    print("".join(re.findall(r'[\u4e00-\u9fff]+', '国有土地收益基金收入▲')))
+    print(len("".join(re.findall(r'[\u4e00-\u9fff]+', '国有土地收益基金收入▲'))))

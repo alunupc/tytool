@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import QMainWindow, QTreeWidget, QWidget, QTreeWidgetItem, 
 from matplotlib import pylab
 from matplotlib.pyplot import axis
 
+from convert import doc_to_pdf
 from downloader import DownLoader
 from excel import Excel
 from lineedit import LineEdit
@@ -653,8 +654,12 @@ class MainWindow(QMainWindow):
                     """
                     if len(page) > 0:
                         # print((list(map(str, page))))
-                        pdf = camelot.read_pdf(self.pathEdit.text().strip(), flavor='stream',
-                                               pages=','.join(list(map(str, page))))
+                        if suffix.lower() == "doc" or suffix.lower() == "docx":
+                            pdf = camelot.read_pdf(self.pathEdit.text().strip().replace("."+suffix, ".pdf"), flavor='stream',
+                                                   pages=','.join(list(map(str, page))))
+                        else:
+                            pdf = camelot.read_pdf(self.pathEdit.text().strip(), flavor='stream',
+                                                   pages=','.join(list(map(str, page))))
                         # print(len(pdf))
                         for i in range(len(pdf)):
                             table_list = []

@@ -773,6 +773,10 @@ class MainWindow(QMainWindow):
             actual_num = process_param(self.actualEdit.text().strip())
             if self.codeEdit.text().strip() != "":
                 code_num = process_param(self.codeEdit.text().strip())
+                if (len(budget_num) > 0 and len(budget_num) != len(code_num)) or (
+                        len(actual_num) > 0 and len(actual_num) != len(code_num)):
+                    QMessageBox.information(self, "提示", '    长度不对应！    ')
+                    return
                 for data in data_list:
                     for i in range(len(code_num)):
                         key = re.sub(r'\s+', '', str(data[code_num[i] - 1]))
@@ -796,6 +800,10 @@ class MainWindow(QMainWindow):
                                         {key: {"决算数": data[actual_num[i] - 1]}})
             else:
                 sub_num = process_param(self.subEdit.text().strip())
+                if (len(budget_num) > 0 and len(budget_num) != len(sub_num)) or (
+                        len(actual_num) > 0 and len(actual_num) != len(sub_num)):
+                    QMessageBox.information(self, "提示", '    长度不对应！    ')
+                    return
                 name_list = []
                 for i in range(len(data_list)):
                     row_name = []

@@ -95,6 +95,13 @@ class MultiTree(object):
                 res.append(node.data.get("code"))
         return res
 
+    def search_node_by_name(self, name) -> list:
+        res = []
+        for node in self.node_list:
+            if self.remove_char(name) == self.remove_char(node.data.get("name")):
+                res.append(node)
+        return res
+
     @staticmethod
     def remove_char(string):
         return "".join(re.findall(r'[\u4e00-\u9fff]+', string))

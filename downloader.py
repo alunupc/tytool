@@ -8,6 +8,8 @@ from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from unrar import rarfile
 
+from log import Logger
+
 
 class DownLoader:
     def __init__(self, timeout=None, url="", path=""):
@@ -20,6 +22,7 @@ class DownLoader:
         # self.path = path.rstrip(path.split("/")[-1])
         self.path = path
         self.url = url
+        self.log = Logger('downloader.log', level='error')
 
     def __del__(self):
         self.browser.close()
@@ -41,22 +44,27 @@ class DownLoader:
                                            self.path.replace("/", "\\"))
         except Exception as e:
             print(e)
+            self.log.logger.error(e)
+
         pass
 
     def download(self, url, name=""):
-        res = requests.get(url)
-        if name == "":
-            file_name = url.split("/")[-1]
-            if "?" in file_name:
-                file_name = file_name.split("?")[-1]
-            if "=" in file_name:
-                file_name = file_name.split("=")[-1]
-        else:
-            file_name = name
-            if "." not in file_name:
-                file_name += "." + url.split(".")[-1]
-        with open(os.path.join(self.path.replace("/", "\\"), file_name), 'wb') as f:
-            f.write(res.content)
+        try:
+            res = requests.get(url)
+            if name == "":
+                file_name = url.split("/")[-1]
+                if "?" in file_name:
+                    file_name = file_name.split("?")[-1]
+                if "=" in file_name:
+                    file_name = file_name.split("=")[-1]
+            else:
+                file_name = name
+                if "." not in file_name:
+                    file_name += "." + url.split(".")[-1]
+            with open(os.path.join(self.path.replace("/", "\\"), file_name), 'wb') as f:
+                f.write(res.content)
+        except Exception as e:
+            self.log.logger.error(e)
 
     @staticmethod
     def decompression(file_path, target_path):
@@ -67,12 +75,15 @@ class DownLoader:
         :return:
         """
         if file_path.endswith(".rar"):
-            # mode的值只能为'r'
-            rar_file = rarfile.RarFile(file_path, mode='r')
-            # 得到压缩包里所有的文件
-            rar_list = rar_file.namelist()
-            for f in rar_list:
-                rar_file.extract(f, target_path)
+            try:
+                # mode的值只能为'r'
+                rar_file = rarfile.RarFile(file_path, mode='r')
+                # 得到压缩包里所有的文件
+                rar_list = rar_file.namelist()
+                for f in rar_list:
+                    rar_file.extract(f, target_path)
+            except Exception as e:
+                Logger('decompress.log', level='error').logger.error(e)
         elif file_path.endswith(".zip"):
             # zip_file = zipfile.ZipFile(file_path, mode='r')
             with zipfile.ZipFile(file_path, mode='r') as zip_file:
@@ -91,7 +102,7 @@ class DownLoader:
                             except Exception as e:
                                 os.remove(join(target_path, file))
                         except Exception as e:
-                            print(e)
+                            Logger('decompress.log', level='error').logger.error(e)
         else:
             pass
 

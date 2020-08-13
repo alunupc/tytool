@@ -17,10 +17,10 @@ from PyQt5.QtWidgets import QMainWindow, QTreeWidget, QWidget, QTreeWidgetItem, 
 from matplotlib import pylab
 from matplotlib.pyplot import axis
 
-from convert import doc_to_pdf
 from downloader import DownLoader
 from excel import Excel
 from lineedit import LineEdit
+from log import Logger
 from node import MultiTree, TreeNode
 from utils import process_param, process_file
 
@@ -35,6 +35,7 @@ class RunThread(QtCore.QThread):
         self.root = root
         self.tree = tree
         self.year = year
+        self.log = Logger('init.log', level='error')
 
     def __del__(self):
         self.wait()
@@ -64,8 +65,9 @@ class RunThread(QtCore.QThread):
             # 创建游标，使用连接当中的cursor方法， 使用游标对象进行接受cursor
             cursor = conn.cursor()
         except Exception as e:
-            QMessageBox.information(self, "提示", '    数据库连接失败！    ')
+            # QMessageBox.information(self, "提示", '    数据库连接失败！    ')
             print(e)
+            self.log.logger.error(e)
 
         try:
             query_sql = "SELECT id, pid, code, name, type, gid, flag FROM ft_subject WHERE gid=%s ORDER BY id ASC"
@@ -102,15 +104,18 @@ class RunThread(QtCore.QThread):
             self.init_tree_widget(self.root, 0, self.tree.tree)
         except Exception as e:
             print(e)
+            self.log.logger.error(e)
             conn.rollback()
-            QMessageBox.information(self, "提示", '    数据库查询失败！    ')
+            # QMessageBox.information(self, "提示", '    数据库查询失败！    ')
         try:
             # 关闭连接释放资源，先关闭游标
             cursor.close()
             # 再关闭连接对象
             conn.close()
         except Exception as e:
-            QMessageBox.information(self, "提示", '    关闭数据库失败！    ')
+            print(e)
+            self.log.logger.error(e)
+            # QMessageBox.information(self, "提示", '    关闭数据库失败！    ')
 
     def run(self):
         print("Access the thread!")
@@ -125,6 +130,7 @@ class DownloadThread(QtCore.QThread):
         super(DownloadThread, self).__init__()
         self.url = url
         self.path = path
+        self.log = Logger('downloadthread.log', level='error')
 
     def __del__(self):
         self.wait()
@@ -137,6 +143,8 @@ class DownloadThread(QtCore.QThread):
             self.resSignal.emit("ok")  # 任务完成后，发送信号
         except Exception as e:
             self.resSignal.emit("fail")  # 任务完成后，发送信号
+            self.log.logger.error(e)
+            # self.resSignal.emit(e)  # 任务完成后，发送信号
             # QMessageBox.information(self, "提示", '    ！    ')
 
 
@@ -573,6 +581,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def on_check_btn_clicked(self):
+        # self.find_code_by_name()
         if self.currentPageEdit.text().strip() == "" or self.pathEdit.text().strip() == "":
             QMessageBox.information(self, "提示", '    输入不能为空！    ')
         elif not self.pathEdit.text().strip().endswith(".pdf"):
@@ -655,7 +664,8 @@ class MainWindow(QMainWindow):
                     if len(page) > 0:
                         # print((list(map(str, page))))
                         if suffix.lower() == "doc" or suffix.lower() == "docx":
-                            pdf = camelot.read_pdf(self.pathEdit.text().strip().replace("."+suffix, ".pdf"), flavor='stream',
+                            pdf = camelot.read_pdf(self.pathEdit.text().strip().replace("." + suffix, ".pdf"),
+                                                   flavor='stream',
                                                    pages=','.join(list(map(str, page))))
                         else:
                             pdf = camelot.read_pdf(self.pathEdit.text().strip(), flavor='stream',
@@ -687,6 +697,35 @@ class MainWindow(QMainWindow):
                 QMessageBox.information(self, "提示", '    提取信息结束！    ')
         except Exception as e:
             QMessageBox.information(self, "提示", e)
+
+    def find_code_by_name(self):
+        """
+        Test of new method for finding the code
+        :param name_list:
+        :return:
+        """
+        pdf = camelot.read_pdf(r'C:\Users\localhost\Desktop\政府性基金预算支出表.pdf', flavor='stream',
+                               pages='1')
+        for i in range(len(pdf)):
+            name_list = []
+            for row_data in pdf[i].df.values.tolist():
+                name = re.sub(r'\s+', '', row_data[0])
+                name = name.split("、")[-1]
+                name = name.split("：")[-1]
+                if name.strip() != "":
+                    name_list.append(name.strip())
+
+            # print(name_list)
+            self.tree.prepare_search_name(self.tree_dict.get("政府性基金预算收支科目"))
+            print(self.tree.node_list)
+            res = []
+            for name in name_list:
+                print("".join(re.findall(r'[\u4e00-\u9fff]+', name)))
+                res.append(self.tree.search_name(name))
+            for item in res:
+                print(item)
+
+        pass
 
     def find_code(self, name_list):
         """
@@ -829,8 +868,11 @@ class MainWindow(QMainWindow):
     def on_download_thread(self, msg):
         if msg == "ok":
             QMessageBox.information(self, "提示", '    文件下载成功！    ')
-        else:
+        elif msg == "fail":
             QMessageBox.information(self, "提示", '    文件下载失败！    ')
+        else:
+            pass
+            # QMessageBox.information(self, "提示", msg)
 
     @pyqtSlot()
     def on_init_thread(self, year, tree):

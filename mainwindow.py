@@ -22,6 +22,7 @@ from excel import Excel
 from lineedit import LineEdit
 from log import Logger
 from node import MultiTree, TreeNode
+from pageinfo import PageInfo
 from utils import process_param, process_file
 
 matplotlib.use("Qt5Agg")
@@ -152,6 +153,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self, *args, **kwargs):
         super().__init__()
+        self.pageInfo = PageInfo("", "")
         self.setWindowTitle("河北腾云信息科技有限公司")
         self.icon = QtGui.QIcon()
         self.icon.addPixmap(QtGui.QPixmap("images/logo.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -204,6 +206,8 @@ class MainWindow(QMainWindow):
         self.charsetEdit.setText("utf8")
         self.yearEdit.setText("2019")
 
+        self.pageTextInfo = []
+
         self.dataLayout.addWidget(self.hostLab, 0, 0)
         self.dataLayout.addWidget(self.hostEdit, 0, 1)
         self.dataLayout.addWidget(self.portLab, 0, 2)
@@ -255,6 +259,7 @@ class MainWindow(QMainWindow):
         self.budgetLab = QLabel("预算数：")
         self.actualLab = QLabel("决算数：")
         self.pageLab = QLabel("页码：")
+        self.pageInfoBtn = QPushButton("页面信息")
         self.regxLab = QLabel("分割符：")
         self.posLab = QLabel("名称位置：")
         self.targetLab = QLabel("目标文件路径：")
@@ -469,6 +474,7 @@ class MainWindow(QMainWindow):
 
         self.budgetLayout.addWidget(self.pageLab, 11, 0)
         self.budgetLayout.addWidget(self.pageEdit, 11, 1)
+        self.budgetLayout.addWidget(self.pageInfoBtn, 11, 4)
 
         self.budgetLayout.addWidget(self.boundLab, 12, 0)
         self.budgetLayout.addWidget(self.boundEdit, 12, 1)
@@ -483,6 +489,11 @@ class MainWindow(QMainWindow):
         self.btnLayout.addWidget(self.extractBtn)
         self.btnLayout.addSpacing(20)
         self.btnLayout.addWidget(self.genBtn)
+
+        # self.testBtn = QPushButton("测试")
+        # self.btnLayout.addSpacing(20)
+        # self.btnLayout.addWidget(self.testBtn)
+
         self.btnWidget.setLayout(self.btnLayout)
         self.budgetLayout.addWidget(self.btnWidget, 13, 0, 1, 4)
 
@@ -536,6 +547,29 @@ class MainWindow(QMainWindow):
         self.initBtn.clicked.connect(self.on_init_btn_clicked)
         self.genBtn.clicked.connect(self.on_gen_btn_clicked)
         self.downloadBtn.clicked.connect(self.on_download_btn_clicked)
+        self.pageInfoBtn.clicked.connect(self.on_page_info_btn_clicked)
+        self.testBtn.clicked.connect(self.find_code_by_name)
+
+    @pyqtSlot()
+    def on_page_info_btn_clicked(self):
+        if self.pageEdit.text().strip() == "":
+            QMessageBox.information(self, "提示", '    页码不能为空！    ')
+            return
+        page = process_param(self.pageEdit.text().strip())
+        if len(page) > 0:
+
+            suffix = self.pathEdit.text().split(".")[-1]
+
+            if suffix.lower() == "doc" or suffix.lower() == "docx" or suffix.lower() == "pdf":
+                pdf = camelot.read_pdf(self.pathEdit.text().strip(), flavor='stream',
+                                       pages=str(page[0]))
+                if len(pdf) > 0:
+                    info = ""
+                    for i, row in enumerate(pdf[0].df.values.tolist()):
+                        info += ",".join(row) + "\n"
+                    self.pageInfo = PageInfo(page[0], info)
+                    self.pageInfo.setWindowModality(QtCore.Qt.ApplicationModal)
+                    self.pageInfo.show()
 
     @pyqtSlot()
     def on_download_btn_clicked(self):
@@ -698,6 +732,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.information(self, "提示", e)
 
+    @pyqtSlot()
     def find_code_by_name(self):
         """
         Test of new method for finding the code
@@ -714,16 +749,27 @@ class MainWindow(QMainWindow):
                 name = name.split("：")[-1]
                 if name.strip() != "":
                     name_list.append(name.strip())
-
-            # print(name_list)
             self.tree.prepare_search_name(self.tree_dict.get("政府性基金预算收支科目"))
-            print(self.tree.node_list)
             res = []
             for name in name_list:
-                print("".join(re.findall(r'[\u4e00-\u9fff]+', name)))
-                res.append(self.tree.search_name(name))
+                res.append(self.tree.search_node_by_name(name, 0.8))
             for item in res:
                 print(item)
+
+        pass
+
+    def backtracking(self, index, data_list, res=[]):
+        if index == len(data_list) - 1:
+            return
+        if len(data_list[index]) == 0:
+            return
+        for data in data_list:
+            res_temp = res[:]
+            if len(res_temp) == 0:
+                pass
+            for item in res_temp:
+                if data.get("pid") == item.get("id"):
+                    pass
 
         pass
 
@@ -765,6 +811,7 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "提示", e)
 
     def parse(self, data_list):
+        # print(data_list)
         try:
             if len(data_list) == 0:
                 QMessageBox.information(self, "提示", '    表格解析失败！    ')
@@ -826,6 +873,8 @@ class MainWindow(QMainWindow):
                                     self.json.get(self.comboBox.currentText().strip()).update(
                                         {key: {"预算数": data_list[index_code[0]][budget_num[j] - 1]}})
                             if len(actual_num) > 0:
+                                print("------------>", actual_num[j] - 1, type(actual_num[j]))
+                                print("___________", data_list[index_code[0]])
                                 if self.json.get(self.comboBox.currentText().strip()).get(key):
                                     self.json.get(self.comboBox.currentText().strip()).get(key).update(
                                         {"决算数": data_list[index_code[0]][actual_num[j] - 1]})

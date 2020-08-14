@@ -1,3 +1,4 @@
+import difflib
 import re
 
 
@@ -95,11 +96,12 @@ class MultiTree(object):
                 res.append(node.data.get("code"))
         return res
 
-    def search_node_by_name(self, name) -> list:
+    def search_node_by_name(self, name, threshold) -> list:
         res = []
         for node in self.node_list:
-            if self.remove_char(name) == self.remove_char(node.data.get("name")):
-                res.append(node)
+            if difflib.SequenceMatcher(None, self.remove_char(name),
+                                       self.remove_char(node.data.get("name"))).quick_ratio() >= threshold:
+                res.append(node.data)
         return res
 
     @staticmethod

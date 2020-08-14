@@ -548,7 +548,7 @@ class MainWindow(QMainWindow):
         self.genBtn.clicked.connect(self.on_gen_btn_clicked)
         self.downloadBtn.clicked.connect(self.on_download_btn_clicked)
         self.pageInfoBtn.clicked.connect(self.on_page_info_btn_clicked)
-        self.testBtn.clicked.connect(self.find_code_by_name)
+        # self.testBtn.clicked.connect(self.find_code_by_name)
 
     @pyqtSlot()
     def on_page_info_btn_clicked(self):
@@ -557,9 +557,7 @@ class MainWindow(QMainWindow):
             return
         page = process_param(self.pageEdit.text().strip())
         if len(page) > 0:
-
             suffix = self.pathEdit.text().split(".")[-1]
-
             if suffix.lower() == "doc" or suffix.lower() == "docx" or suffix.lower() == "pdf":
                 pdf = camelot.read_pdf(self.pathEdit.text().strip(), flavor='stream',
                                        pages=str(page[0]))
@@ -570,6 +568,15 @@ class MainWindow(QMainWindow):
                     self.pageInfo = PageInfo(page[0], info)
                     self.pageInfo.setWindowModality(QtCore.Qt.ApplicationModal)
                     self.pageInfo.show()
+            elif suffix.lower() == "xls" or suffix.lower() == "xlsx":
+                wb = xlrd.open_workbook(self.pathEdit.text().strip())
+                sheet_names = wb.sheet_names()
+                info = "\n"
+                for i, sheet_name in enumerate(sheet_names):
+                    info += str(i + 1) + "\t" + sheet_name + "\n"
+                self.pageInfo = PageInfo(page[0], info)
+                self.pageInfo.setWindowModality(QtCore.Qt.ApplicationModal)
+                self.pageInfo.show()
 
     @pyqtSlot()
     def on_download_btn_clicked(self):
@@ -723,8 +730,8 @@ class MainWindow(QMainWindow):
                         print(table.nrows)
 
                         for ii in range(table.nrows):
-                            print(type(table.row_values(ii)))
-                            print(table.row_values(ii))
+                            # print(type(table.row_values(ii)))
+                            # print(table.row_values(ii))
                             table_list.append(table.row_values(ii))
                         print(table_list)
                         self.parse(table_list)

@@ -561,6 +561,7 @@ class MainWindow(QMainWindow):
             if suffix.lower() == "doc" or suffix.lower() == "docx" or suffix.lower() == "pdf":
                 pdf = camelot.read_pdf(self.pathEdit.text().strip(), flavor='stream',
                                        pages=str(page[0]))
+                print(len(pdf))
                 if len(pdf) > 0:
                     info = ""
                     for i, row in enumerate(pdf[0].df.values.tolist()):
@@ -596,10 +597,25 @@ class MainWindow(QMainWindow):
         # QMessageBox.information(self, "提示", '    文件下载完成！    ')
         # pass
 
+    # @staticmethod
+    # def check_excel_is_open(path):
+    #     file_name = path.split("\\")[-1]
+    #     print(file_name)
+    #     print(path)
+    #     print(path.replace(file_name, '~$' + file_name))
+    #     if os.path.exists(path.replace(file_name, '~$' + file_name)):
+    #         print("True")
+    #         return True
+    #     print("False")
+    #     return False
+
     @pyqtSlot()
     def on_gen_btn_clicked(self):
         if len(self.json) > 0:
             # print(os.path.join(self.targetEdit.text().strip(), "预决算.xls"))
+            # if self.check_excel_is_open(os.path.join(self.targetEdit.text().strip().replace("/", "\\"), "预决算.xls")):
+            #     QMessageBox.information(self, "提示", '    Excel文件已经打开，请先关闭！    ')
+            #     return
             excel_writer = Excel(os.path.join(self.targetEdit.text().strip().replace("/", "\\"), "预决算.xls"),
                                  self.sheet_name_list, self.json)
             excel_writer.write_excel()
@@ -667,7 +683,7 @@ class MainWindow(QMainWindow):
             page = process_param(self.pageEdit.text().strip())
             if suffix.lower() == "doc" or suffix.lower() == "docx" or suffix.lower() == "pdf":
                 bound_info = self.boundEdit.text().strip()
-                # print(bound_info)
+                print(bound_info)
                 if bound_info != "":
                     if bound_info.endswith(","):
                         bound_info = bound_info.rstrip(",")
@@ -831,6 +847,11 @@ class MainWindow(QMainWindow):
                         len(actual_num) > 0 and len(actual_num) != len(code_num)):
                     QMessageBox.information(self, "提示", '    长度不对应！    ')
                     return
+                if (len(budget_num) > 0 and budget_num[-1] > len(data_list[0])) or (
+                        len(actual_num) > 0 and actual_num[-1] > len(data_list[0])) or code_num[-1] > len(
+                    data_list[0]):
+                    QMessageBox.information(self, "提示", '    列数越界！    ')
+                    return
                 for data in data_list:
                     for i in range(len(code_num)):
                         key = re.sub(r'\s+', '', str(data[code_num[i] - 1]))
@@ -857,6 +878,11 @@ class MainWindow(QMainWindow):
                 if (len(budget_num) > 0 and len(budget_num) != len(sub_num)) or (
                         len(actual_num) > 0 and len(actual_num) != len(sub_num)):
                     QMessageBox.information(self, "提示", '    长度不对应！    ')
+                    return
+                if (len(budget_num) > 0 and budget_num[-1] > len(data_list[0])) or (
+                        len(actual_num) > 0 and actual_num[-1] > len(data_list[0])) or sub_num[-1] > len(
+                    data_list[0]):
+                    QMessageBox.information(self, "提示", '    列数越界！    ')
                     return
                 name_list = []
                 for i in range(len(data_list)):
@@ -890,6 +916,16 @@ class MainWindow(QMainWindow):
                                         {key: {"决算数": data_list[index_code[0]][actual_num[j] - 1]}})
         except Exception as e:
             QMessageBox.information(self, "提示", e)
+
+    # def check_input(self, num, budget, actual, data):
+    #     if (len(budget) > 0 and len(budget) != len(num)) or (
+    #             len(actual) > 0 and len(actual) != len(num)):
+    #         QMessageBox.information(self, "提示", '    长度不对应！    ')
+    #         return
+    #     if budget[-1] >= len(data[0]) or actual[-1] >= len(data[0]) or num[-1] >= len(
+    #             data[0]):
+    #         QMessageBox.information(self, "提示", '    列数越界！    ')
+    #         return
 
     @pyqtSlot()
     def on_edit_double_clicked(self):

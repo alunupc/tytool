@@ -618,7 +618,12 @@ class MainWindow(QMainWindow):
             #     return
             excel_writer = Excel(os.path.join(self.targetEdit.text().strip().replace("/", "\\"), "预决算.xls"),
                                  self.sheet_name_list, self.json)
-            excel_writer.write_excel()
+            try:
+                excel_writer.write_excel()
+            except:
+                QMessageBox.information(self, "提示", '    写入失败查看是否文件已经打开！    ')
+                return
+
             QMessageBox.information(self, "提示", '    Json信息写入Excel成功！    ')
 
     @pyqtSlot()
@@ -631,7 +636,11 @@ class MainWindow(QMainWindow):
                 for file in os.listdir(self.targetEdit.text().strip().replace("/", "\\")):
                     # print(os.path.join(self.targetEdit.text().strip().replace("/", "\\"), file))
                     if os.path.isfile(os.path.join(self.targetEdit.text().strip().replace("/", "\\"), file)):
-                        os.remove(os.path.join(self.targetEdit.text().strip().replace("/", "\\"), file))
+                        try:
+                            os.remove(os.path.join(self.targetEdit.text().strip().replace("/", "\\"), file))
+                        except:
+                            QMessageBox.information(self, "提示", '    删除文件失败请查看是否打开！    ')
+                            return
                 QMessageBox.information(self, "提示", '    清空文件成功！    ')
         except Exception as e:
             QMessageBox.information(self, "提示", e)
@@ -752,8 +761,8 @@ class MainWindow(QMainWindow):
                         print(table_list)
                         self.parse(table_list)
                 QMessageBox.information(self, "提示", '    提取信息结束！    ')
-        except Exception as e:
-            QMessageBox.information(self, "提示", e)
+        except:
+            QMessageBox.information(self, "提示", "提取信息失败请查看输入是否有误！")
 
     @pyqtSlot()
     def find_code_by_name(self):

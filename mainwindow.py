@@ -559,7 +559,8 @@ class MainWindow(QMainWindow):
         if len(page) > 0:
             suffix = self.pathEdit.text().split(".")[-1]
             if suffix.lower() == "doc" or suffix.lower() == "docx" or suffix.lower() == "pdf":
-                pdf = camelot.read_pdf(self.pathEdit.text().strip(), flavor='stream',
+                pdf = camelot.read_pdf(self.pathEdit.text().strip().replace("docx", "pdf").replace("doc", "pdf"),
+                                       flavor='stream',
                                        pages=str(page[0]))
                 print(len(pdf))
                 if len(pdf) > 0:
@@ -578,6 +579,8 @@ class MainWindow(QMainWindow):
                 self.pageInfo = PageInfo(page[0], info)
                 self.pageInfo.setWindowModality(QtCore.Qt.ApplicationModal)
                 self.pageInfo.show()
+            else:
+                pass
 
     @pyqtSlot()
     def on_download_btn_clicked(self):
@@ -650,11 +653,15 @@ class MainWindow(QMainWindow):
         # self.find_code_by_name()
         if self.currentPageEdit.text().strip() == "" or self.pathEdit.text().strip() == "":
             QMessageBox.information(self, "提示", '    输入不能为空！    ')
+            return
         elif not self.pathEdit.text().strip().endswith(".pdf"):
             QMessageBox.information(self, "提示", '    只有PDF文件需要次操作！    ')
+            return
         else:
-            pdf = camelot.read_pdf(self.pathEdit.text().strip(), flavor='stream',
-                                   pages=self.currentPageEdit.text().strip(), table_areas=['0,700,550,50'])
+            print(self.pathEdit.text().strip().replace('.docx', '.pdf').replace(".doc", '.pdf'))
+            pdf = camelot.read_pdf(self.pathEdit.text().strip().replace('.docx', '.pdf').replace(".doc", '.pdf'),
+                                   flavor='stream',
+                                   pages=self.currentPageEdit.text().strip())
             if pdf:
                 plt = camelot.plot(pdf[0], kind='textedge')
                 plt.show()
